@@ -1,0 +1,13 @@
+[
+    {
+        "node1_name" : "john",
+        "node1_id" : 101,
+        "node1_status" : "Healthy"
+    },
+
+    {
+        "node1_name" : "harry",
+        "node1_id" : 102,
+        "node1_status" : "SoS"
+    }
+]
