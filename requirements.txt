@@ -16,3 +16,4 @@ aiofiles==24.1.0
 
 spidev; platform_system == "Linux"
 RPi.GPIO; platform_system == "Linux"
+
