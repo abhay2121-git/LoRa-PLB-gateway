@@ -15,9 +15,9 @@ from sqlalchemy import (
     String,
     Text,
 )
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.database import Base
+from app.core.database import Base
 
 
 def utc_now() -> datetime:
@@ -30,6 +30,7 @@ class Node(Base):
     id: Mapped[int] = mapped_column(
         Integer,
         primary_key=True,
+        autoincrement=True,
     )
 
     node_id: Mapped[str] = mapped_column(
@@ -56,6 +57,22 @@ class Node(Base):
         nullable=False,
     )
 
+    packet_type: Mapped[str | None] = mapped_column(
+        String(50),
+        nullable=True,
+        default="HEARTBEAT",
+    )
+
+    sensor_logs: Mapped[list["SensorLog"]] = relationship(
+        "SensorLog", back_populates="node", cascade="all, delete-orphan"
+    )
+    emergency_events: Mapped[list["EmergencyEvent"]] = relationship(
+        "EmergencyEvent", back_populates="node", cascade="all, delete-orphan"
+    )
+
+    def __repr__(self) -> str:
+        return f"<Node id={self.node_id} status={self.status} battery={self.battery}% last_seen={self.last_seen}>"
+
 
 class SensorLog(Base):
     __tablename__ = "sensor_logs"
@@ -63,6 +80,7 @@ class SensorLog(Base):
     id: Mapped[int] = mapped_column(
         Integer,
         primary_key=True,
+        autoincrement=True,
     )
 
     emergency_id: Mapped[str] = mapped_column(
@@ -131,6 +149,11 @@ class SensorLog(Base):
         nullable=False,
     )
 
+    node: Mapped["Node"] = relationship("Node", back_populates="sensor_logs")
+
+    def __repr__(self) -> str:
+        return f"<SensorLog id={self.id} node_id={self.node_id} emergency_id={self.emergency_id}>"
+
 
 class EmergencyEvent(Base):
     __tablename__ = "emergency_events"
@@ -138,6 +161,7 @@ class EmergencyEvent(Base):
     id: Mapped[int] = mapped_column(
         Integer,
         primary_key=True,
+        autoincrement=True,
     )
 
     emergency_id: Mapped[str] = mapped_column(
@@ -198,6 +222,11 @@ class EmergencyEvent(Base):
         nullable=False,
     )
 
+    node: Mapped["Node"] = relationship("Node", back_populates="emergency_events")
+
+    def __repr__(self) -> str:
+        return f"<EmergencyEvent id={self.emergency_id} node_id={self.node_id} type={self.event_type} resolved={self.resolved}>"
+
 
 class PacketLog(Base):
     __tablename__ = "packet_logs"
@@ -205,6 +234,7 @@ class PacketLog(Base):
     id: Mapped[int] = mapped_column(
         Integer,
         primary_key=True,
+        autoincrement=True,
     )
 
     packet_id: Mapped[str] = mapped_column(
@@ -242,7 +272,7 @@ class PacketLog(Base):
 
     ack_status: Mapped[bool] = mapped_column(
         Boolean,
-        default=False,
+        default=True,
         nullable=False,
     )
 
@@ -257,3 +287,6 @@ class PacketLog(Base):
         default=utc_now,
         nullable=False,
     )
+
+    def __repr__(self) -> str:
+        return f"<PacketLog packet_id={self.packet_id} sender={self.sender_node_id} type={self.packet_type}>"

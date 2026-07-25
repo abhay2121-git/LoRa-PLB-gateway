@@ -1,22 +1,22 @@
 # Database configuration using PostgreSQL + SQLAlchemy
 
 from collections.abc import Generator
-import sys
-
 from pathlib import Path
+import sys
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
-from app.config import settings
+from app.core.config import settings
 
 
 class Base(DeclarativeBase):
     pass
+
 
 engine = create_engine(
     settings.database_url,
@@ -40,16 +40,17 @@ def get_db() -> Generator[Session, None, None]:
     Creates a database session and closes it automatically.
     """
     db = SessionLocal()
-
     try:
         yield db
-
     finally:
         db.close()
 
 
 def create_tables() -> None:
     """
-    Creates all tables defined in SQLAlchemy models.
+    Creates all tables defined in SQLAlchemy models and applies schema migrations if needed.
     """
     Base.metadata.create_all(bind=engine)
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE nodes ADD COLUMN IF NOT EXISTS packet_type VARCHAR(50);"))
+        conn.commit()

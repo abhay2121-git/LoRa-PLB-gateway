@@ -6,13 +6,14 @@ from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
 class Settings(BaseSettings):
     app_name: str = "LoRa PLB Gateway"
     app_version: str = "1.0.0"
     debug: bool = False
+    log_level: str = "INFO"
 
     host: str = "0.0.0.0"
     port: int = 8000
@@ -23,7 +24,8 @@ class Settings(BaseSettings):
 
     gateway_id: str = "GATEWAY_01"
 
-    node_offline_timeout_seconds: int = 120
+    # 15 minutes timeout for marking nodes OFFLINE
+    node_offline_timeout_seconds: int = 900
 
     model_config = SettingsConfigDict(
         env_file=PROJECT_ROOT / ".env",

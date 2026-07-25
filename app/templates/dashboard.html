@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ page_title }}</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="stylesheet" href="/static/css/dashboard.css">
+</head>
+<body>
+
+  <!-- Top Header Navigation -->
+  <header class="header-nav">
+    <div class="logo-section">
+      <div class="logo-icon">PLB</div>
+      <div class="logo-text">LoRa PLB Gateway</div>
+    </div>
+    <div class="status-pills">
+      <a href="/docs" target="_blank" class="pill" style="text-decoration: none; color: var(--accent-blue);">
+        <span>📖 API Docs (/docs)</span>
+      </a>
+      <button class="btn btn-primary" onclick="openSimulateModal()" style="display: flex; align-items: center; gap: 0.4rem;">
+        <span>⚡ Simulate Packet</span>
+      </button>
+      <div class="pill">
+        <div class="indicator online"></div>
+        <span>Gateway Online</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+
+    <!-- Summary Metrics Header -->
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-title">Total Nodes</div>
+        <div class="metric-value" id="stat-total-nodes">0</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-title">Online Nodes</div>
+        <div class="metric-value" style="color: var(--accent-green);" id="stat-online-nodes">0</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-title">Offline Nodes</div>
+        <div class="metric-value" style="color: var(--text-secondary);" id="stat-offline-nodes">0</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-title">Active Emergencies</div>
+        <div class="metric-value" style="color: var(--accent-red);" id="stat-active-emergencies">0</div>
+      </div>
+    </div>
+
+    <!-- SECTION 1: LIVE NODE MONITORING -->
+    <section class="section-card">
+      <div class="section-header">
+        <h2 class="section-title">
+          <span>📡</span> Live Node Monitoring
+        </h2>
+        <span class="badge badge-hb">Real-Time State</span>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Node ID</th>
+              <th>Status</th>
+              <th>Battery</th>
+              <th>Last Seen</th>
+              <th>Last Packet Type</th>
+              <th>Connectivity</th>
+            </tr>
+          </thead>
+          <tbody id="nodes-table-body">
+            <tr>
+              <td colspan="6" style="text-align:center; color: var(--text-secondary);">Loading node state...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECTION 2: EMERGENCY HISTORY -->
+    <section class="section-card">
+      <div class="section-header">
+        <h2 class="section-title">
+          <span>🚨</span> Emergency History
+        </h2>
+        <span class="badge badge-emergency">SOS / FALL / HAZARD Events</span>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Event Type</th>
+              <th>Node ID</th>
+              <th>GPS Coordinates</th>
+              <th>Timestamp</th>
+              <th>Battery</th>
+              <th>Heart Rate</th>
+              <th>Temp</th>
+              <th>SpO2</th>
+              <th>Remarks</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="emergencies-table-body">
+            <tr>
+              <td colspan="10" style="text-align:center; color: var(--text-secondary);">Loading emergency history...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Packet Simulation Modal -->
+  <div class="modal-overlay" id="simulate-modal">
+    <div class="modal-content" style="max-width: 550px;">
+      <div class="modal-header">⚡ Simulate Incoming Sensor Packet</div>
+      
+      <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+        <button class="btn" style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; flex: 1;" onclick="fillPreset('HEARTBEAT')">Heartbeat</button>
+        <button class="btn" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; flex: 1;" onclick="fillPreset('SOS')">SOS Emergency</button>
+        <button class="btn" style="background: rgba(249, 115, 22, 0.2); color: #f97316; flex: 1;" onclick="fillPreset('FALL')">Fall Event</button>
+        <button class="btn" style="background: rgba(234, 179, 8, 0.2); color: #eab308; flex: 1;" onclick="fillPreset('HAZARD')">Hazard Warning</button>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+        <div class="form-group">
+          <label for="sim-packet-id">Packet ID</label>
+          <input type="text" id="sim-packet-id" class="form-control" placeholder="HB-001 or PKT-1001">
+        </div>
+        <div class="form-group">
+          <label for="sim-node-id">Node ID</label>
+          <input type="text" id="sim-node-id" class="form-control" placeholder="NODE_01">
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+        <div class="form-group">
+          <label for="sim-packet-type">Packet Type</label>
+          <select id="sim-packet-type" class="form-control" onchange="toggleEmergencyFields()">
+            <option value="HEARTBEAT">HEARTBEAT</option>
+            <option value="SOS">SOS</option>
+            <option value="FALL">FALL</option>
+            <option value="HAZARD">HAZARD</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="sim-battery">Battery (%)</label>
+          <input type="number" id="sim-battery" class="form-control" min="0" max="100" value="85">
+        </div>
+      </div>
+
+      <div id="sim-emergency-fields" style="display: none;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+          <div class="form-group">
+            <label for="sim-latitude">Latitude</label>
+            <input type="number" step="0.0001" id="sim-latitude" class="form-control" value="21.1458">
+          </div>
+          <div class="form-group">
+            <label for="sim-longitude">Longitude</label>
+            <input type="number" step="0.0001" id="sim-longitude" class="form-control" value="79.0882">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem;">
+          <div class="form-group">
+            <label for="sim-hr">Heart Rate</label>
+            <input type="number" id="sim-hr" class="form-control" value="135">
+          </div>
+          <div class="form-group">
+            <label for="sim-spo2">SpO2 (%)</label>
+            <input type="number" id="sim-spo2" class="form-control" value="94">
+          </div>
+          <div class="form-group">
+            <label for="sim-temp">Temp (°C)</label>
+            <input type="number" step="0.1" id="sim-temp" class="form-control" value="38.2">
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn" style="background: var(--bg-card); color: #fff;" onclick="closeSimulateModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="submitSimulatedPacket()">Send Packet</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Resolution Modal -->
+  <div class="modal-overlay" id="resolve-modal">
+    <div class="modal-content">
+      <div class="modal-header">Resolve Emergency <span id="modal-emergency-id"></span></div>
+      <div class="form-group">
+        <label for="resolve-remarks">Resolution Remarks / Action Taken</label>
+        <textarea id="resolve-remarks" class="form-control" rows="3" placeholder="Enter details e.g., Search & Rescue dispatched, user confirmed safe..."></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn" style="background: var(--bg-card); color: #fff;" onclick="closeResolveModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="submitResolve()">Submit Resolution</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/api.js"></script>
+  <script src="/static/js/dashboard.js"></script>
+</body>
+</html>
