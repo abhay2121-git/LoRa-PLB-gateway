@@ -24,8 +24,29 @@ class Settings(BaseSettings):
 
     gateway_id: str = "GATEWAY_01"
 
-    # 15 minutes timeout for marking nodes OFFLINE
-    node_offline_timeout_seconds: int = 900
+    # LoRa Radio Parameters
+    lora_frequency: float = 433.0
+    lora_bandwidth: int = 125000
+    lora_coding_rate: int = 5
+    lora_spreading_factor: int = 7
+    lora_tx_power: int = 17
+    lora_rx_timeout: int = 10
+    lora_ack_timeout: int = 5
+    lora_retry_count: int = 3
+
+    # Hardware SPI / GPIO Settings
+    spi_bus: int = 0
+    spi_device: int = 0
+    gpio_reset_pin: int = 25
+    gpio_dio0_pin: int = 24
+
+    # Timeout & Cache Settings
+    heartbeat_timeout_seconds: int = 900
+    duplicate_cache_ttl_seconds: int = 3600
+
+    # Queue Worker Settings
+    ack_queue_workers: int = 1
+    outbound_queue_workers: int = 1
 
     model_config = SettingsConfigDict(
         env_file=PROJECT_ROOT / ".env",

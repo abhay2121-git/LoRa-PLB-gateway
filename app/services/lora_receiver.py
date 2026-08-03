@@ -1,162 +1,83 @@
-"""
-LoRa Receiver Service
-
-Continuously listens for LoRa packets from the ESP32 over
-the Raspberry Pi serial interface and forwards valid packets
-to the packet handler.
-"""
-
-import json
+import asyncio
 import logging
-import time
 
-import serial
-from serial import SerialException
-
-from app.core.config import settings
 from app.core.database import SessionLocal
-from app.schemas import SensorPacketCreate
-from app.services.packet_handler import process_packet
+from app.drivers.lora_manager import lora_manager
+from app.services.packet_parser import PacketParseError, PacketParser
+from app.services.packet_processor import PacketProcessor
 
-
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("gateway.lora_receiver")
 
 
 class LoRaReceiver:
+    """
+    LoRa Receiver Background Task (Requirement 5 & 21):
+    Continuously listens for incoming LoRa packets over SPI via LoRaManager.
+    Flow: SX1278 -> LoRaManager -> PacketParser -> PacketProcessor.
+    No serial implementation.
+    """
+
     def __init__(self):
-        """
-        Serial connection is initialized later so the
-        gateway can start even if the LoRa module is
-        temporarily unavailable.
-        """
-        self.serial_connection = None
+        self._running = False
+        self._task: asyncio.Task | None = None
 
-    def connect(self) -> None:
-        """
-        Continuously attempts to connect to the LoRa module.
-        """
+    async def start(self) -> None:
+        if not self._running:
+            self._running = True
+            # Initialize LoRa hardware via LoRaManager
+            await lora_manager.initialize()
+            self._task = asyncio.create_task(self._receiver_loop())
+            logger.info("SPI LoRa Receiver task started.")
 
-        while True:
-
-            try:
-
-                logger.info(
-                    f"Connecting to {settings.serial_port}..."
-                )
-
-                self.serial_connection = serial.Serial(
-                    port=settings.serial_port,
-                    baudrate=settings.serial_baudrate,
-                    timeout=1,
-                )
-
-                logger.info(
-                    "LoRa module connected successfully."
-                )
-
-                return
-
-            except SerialException as exc:
-
-                logger.warning(
-                    f"Unable to connect: {exc}"
-                )
-
-                logger.info(
-                    "Retrying in 5 seconds..."
-                )
-
-                time.sleep(5)
-
-    def start(self) -> None:
-        """
-        Starts listening for LoRa packets forever.
-        """
-
-        logger.info("LoRa Receiver Started.")
-
-        self.connect()
-
-        while True:
-
-            try:
-
-                if self.serial_connection is None:
-                    self.connect()
-
-                if self.serial_connection.in_waiting == 0:
-                    time.sleep(0.05)
-                    continue
-
-                raw_packet = (
-                    self.serial_connection.readline()
-                    .decode("utf-8")
-                    .strip()
-                )
-
-                if not raw_packet:
-                    continue
-
-                logger.info(
-                    f"Packet Received: {raw_packet}"
-                )
-
-                packet_dict = json.loads(raw_packet)
-
-                packet = SensorPacketCreate(
-                    **packet_dict
-                )
-
-                db = SessionLocal()
-
+    async def stop(self) -> None:
+        if self._running:
+            self._running = False
+            if self._task:
+                self._task.cancel()
                 try:
+                    await self._task
+                except asyncio.CancelledError:
+                    pass
+            logger.info("SPI LoRa Receiver task stopped.")
 
-                    result = process_packet(
-                        db=db,
-                        packet=packet,
+    async def _receiver_loop(self) -> None:
+        logger.info("Entering continuous LoRa RX loop...")
+
+        while self._running:
+            try:
+                # Requirement 5: Receive packet strictly via LoRaManager
+                raw_bytes, rssi, snr = await lora_manager.receive_packet(timeout_sec=0.5)
+
+                if not raw_bytes:
+                    await asyncio.sleep(0.05)
+                    continue
+
+                logger.info(f"LoRa Receiver: Received {len(raw_bytes)} bytes packet. RSSI: {rssi}dBm, SNR: {snr}dB")
+
+                # Step 1: Requirement 13 — Parse JSON bytes
+                try:
+                    packet = PacketParser.parse(raw_bytes)
+                except PacketParseError as exc:
+                    logger.warning(f"LoRa Receiver: Dropping unparseable packet: {exc}")
+                    continue
+
+                # Step 2: Process packet through pipeline
+                db = SessionLocal()
+                try:
+                    res = await PacketProcessor.process_packet(
+                        db=db, packet=packet, rssi=rssi, snr=snr
                     )
-
-                    db.commit()
-
-                    logger.info(result.message)
-
+                    logger.info(f"LoRa Receiver Result: {res.message}")
                 except Exception as exc:
-
-                    db.rollback()
-
-                    logger.exception(
-                        f"Database Error: {exc}"
-                    )
-
+                    logger.exception(f"LoRa Receiver DB Error: {exc}")
                 finally:
-
                     db.close()
 
-            except json.JSONDecodeError:
-
-                logger.warning(
-                    "Received malformed JSON packet."
-                )
-
-            except SerialException as exc:
-
-                logger.error(
-                    f"Serial connection lost: {exc}"
-                )
-
-                try:
-                    self.serial_connection.close()
-                except Exception:
-                    pass
-
-                self.serial_connection = None
-
-                self.connect()
-
+            except asyncio.CancelledError:
+                break
             except Exception as exc:
+                logger.exception(f"Unexpected error in LoRa Receiver loop: {exc}")
+                await asyncio.sleep(1.0)
 
-                logger.exception(
-                    f"Unexpected Error: {exc}"
-                )
 
-                time.sleep(1)
+lora_receiver = LoRaReceiver()

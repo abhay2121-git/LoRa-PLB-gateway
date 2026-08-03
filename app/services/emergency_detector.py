@@ -1,13 +1,8 @@
-from pathlib import Path
-import sys
-
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
-
+import logging
 from pydantic import BaseModel
-
 from app.schemas import PacketType, SensorPacketCreate
+
+logger = logging.getLogger("gateway.emergency_detector")
 
 
 class EmergencyResult(BaseModel):
@@ -16,9 +11,7 @@ class EmergencyResult(BaseModel):
     remarks: str | None = None
 
 
-def detect_emergency(
-    packet: SensorPacketCreate,
-) -> EmergencyResult:
+def detect_emergency(packet: SensorPacketCreate) -> EmergencyResult:
     if packet.packet_type == PacketType.HEARTBEAT:
         return EmergencyResult(
             is_emergency=False,

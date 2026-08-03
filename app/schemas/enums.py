@@ -1,0 +1,33 @@
+from enum import Enum
+
+
+class PacketType(str, Enum):
+    HEARTBEAT = "HEARTBEAT"
+    SOS = "SOS"
+    FALL = "FALL"
+    HAZARD = "HAZARD"
+    ACK = "ACK"
+    DELIVERY_CONFIRMATION = "DELIVERY_CONFIRMATION"
+    STATUS_MESSAGE = "STATUS_MESSAGE"
+    CONFIG_UPDATE = "CONFIG_UPDATE"
+
+
+class OutboundMessageType(str, Enum):
+    STATUS_MESSAGE = "STATUS_MESSAGE"
+    HAZARD = "HAZARD"
+    CONFIG_UPDATE = "CONFIG_UPDATE"
+    BATTERY_WARNING = "BATTERY_WARNING"
+    FIRMWARE_UPDATE = "FIRMWARE_UPDATE"
+
+
+class NodeStatus(str, Enum):
+    ONLINE = "ONLINE"
+    OFFLINE = "OFFLINE"
+    EMERGENCY = "EMERGENCY"
+
+
+class OutboundStatus(str, Enum):
+    QUEUED = "QUEUED"
+    SENT = "SENT"
+    DELIVERED = "DELIVERED"
+    FAILED = "FAILED"

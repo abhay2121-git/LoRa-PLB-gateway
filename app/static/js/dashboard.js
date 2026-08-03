@@ -7,15 +7,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function initDashboard() {
   await refreshStats();
+  await refreshGatewayStatus();
   await refreshNodes();
   await refreshEmergencies();
 
-  // Periodic polling fallback every 15s
+  // Periodic polling fallback every 10s
   setInterval(async () => {
     await refreshStats();
+    await refreshGatewayStatus();
     await refreshNodes();
     await refreshEmergencies();
-  }, 15000);
+  }, 10000);
 }
 
 async function refreshStats() {
@@ -25,8 +27,23 @@ async function refreshStats() {
     document.getElementById('stat-online-nodes').textContent = stats.online_nodes;
     document.getElementById('stat-offline-nodes').textContent = stats.offline_nodes;
     document.getElementById('stat-active-emergencies').textContent = stats.active_emergencies;
+    document.getElementById('stat-deliv-confirmations').textContent = stats.delivery_confirmations_sent;
   } catch (err) {
     console.error('Stats update error:', err);
+  }
+}
+
+async function refreshGatewayStatus() {
+  try {
+    const gw = await API.getGatewayStatus();
+    document.getElementById('lora-freq').textContent = `${gw.frequency_mhz} MHz`;
+    document.getElementById('lora-rssi').textContent = `${gw.current_rssi} dBm`;
+    document.getElementById('lora-snr').textContent = `${gw.current_snr} dB`;
+    document.getElementById('lora-rate').textContent = gw.packets_per_second;
+    document.getElementById('lora-ack-rate').textContent = `${gw.ack_success_rate}%`;
+    document.getElementById('lora-deliv-rate').textContent = `${gw.delivery_success_rate}%`;
+  } catch (err) {
+    console.error('Gateway status update error:', err);
   }
 }
 
@@ -37,7 +54,7 @@ async function refreshNodes() {
     if (!tbody) return;
 
     if (nodes.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--text-secondary);">No wearable nodes registered yet. Send a Heartbeat or Emergency packet to register.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color: var(--text-secondary);">No wearable nodes registered yet. Send a Heartbeat or Emergency packet to register.</td></tr>`;
       return;
     }
 
@@ -45,6 +62,9 @@ async function refreshNodes() {
       const statusClass = node.status === 'ONLINE' ? 'badge-online' : (node.status === 'EMERGENCY' ? 'badge-emergency' : 'badge-offline');
       const battFillClass = node.battery < 20 ? 'battery-low' : (node.battery < 50 ? 'battery-medium' : '');
       const lastSeen = new Date(node.last_seen).toLocaleString();
+      const gpsStr = (node.latitude !== null && node.longitude !== null) ? `${node.latitude.toFixed(4)}, ${node.longitude.toFixed(4)}` : 'N/A';
+      const rfStr = (node.rssi !== null && node.snr !== null) ? `${node.rssi} dBm / ${node.snr} dB` : '-';
+      const activeEmgBadge = node.current_emergency ? `<span class="badge badge-sos">${node.current_emergency}</span>` : '<span style="color: var(--accent-green);">NONE</span>';
       const packetTypeBadge = node.packet_type ? `<span class="badge badge-hb">${node.packet_type}</span>` : '-';
 
       return `
@@ -56,8 +76,10 @@ async function refreshNodes() {
             ${node.battery}%
           </td>
           <td>${lastSeen}</td>
+          <td>${gpsStr}</td>
+          <td>${rfStr}</td>
+          <td>${activeEmgBadge}</td>
           <td>${packetTypeBadge}</td>
-          <td>${node.status === 'OFFLINE' ? '<span style="color: var(--text-secondary);">OFFLINE</span>' : '<span style="color: var(--accent-green);">CONNECTED</span>'}</td>
         </tr>
       `;
     }).join('');
@@ -73,7 +95,7 @@ async function refreshEmergencies() {
     if (!tbody) return;
 
     if (emergencies.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; color: var(--text-secondary);">No emergency events recorded. System operating normally.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color: var(--text-secondary);">No emergency events recorded. System operating normally.</td></tr>`;
       return;
     }
 
@@ -81,10 +103,10 @@ async function refreshEmergencies() {
       const badgeClass = emg.event_type === 'SOS' ? 'badge-sos' : (emg.event_type === 'FALL' ? 'badge-fall' : 'badge-hazard');
       const gpsStr = (emg.latitude && emg.longitude) ? `${emg.latitude.toFixed(4)}, ${emg.longitude.toFixed(4)}` : 'N/A';
       const timestamp = new Date(emg.timestamp).toLocaleString();
-      const hr = emg.heart_rate ? `${emg.heart_rate} bpm` : '-';
-      const spo2 = emg.spo2 ? `${emg.spo2}%` : '-';
-      const temp = emg.temperature ? `${emg.temperature}°C` : '-';
+      const vitalsStr = `HR: ${emg.heart_rate || '-'} | SpO2: ${emg.spo2 || '-'}% | Temp: ${emg.temperature || '-'}°C`;
       const batt = emg.battery ? `${emg.battery}%` : '-';
+
+      const delivConfirmBadge = `<span class="badge badge-online">CONFIRMED VIA MESH</span>`;
 
       const resolveCol = emg.resolved
         ? `<span class="badge badge-online">RESOLVED</span>`
@@ -97,16 +119,51 @@ async function refreshEmergencies() {
           <td>${gpsStr}</td>
           <td>${timestamp}</td>
           <td>${batt}</td>
-          <td>${hr}</td>
-          <td>${temp}</td>
-          <td>${spo2}</td>
+          <td><small>${vitalsStr}</small></td>
           <td>${emg.remarks || '-'}</td>
+          <td>${delivConfirmBadge}</td>
           <td>${resolveCol}</td>
         </tr>
       `;
     }).join('');
   } catch (err) {
     console.error('Emergencies update error:', err);
+  }
+}
+
+/* Operator Control Handlers */
+async function submitStatusMessage() {
+  const destNode = document.getElementById('outbound-dest-node').value.trim();
+  const msgText = document.getElementById('outbound-msg-preset').value;
+
+  if (!destNode) {
+    alert('Please enter a Target Node ID.');
+    return;
+  }
+
+  try {
+    const res = await API.sendStatusMessage(destNode, msgText);
+    alert(`Status Message Queued!\nID: ${res.message_id}\nTarget: ${destNode}\nMessage: ${msgText}`);
+  } catch (err) {
+    alert('Failed to send status message: ' + err.message);
+  }
+}
+
+async function submitHazardBroadcast() {
+  const msgText = document.getElementById('hazard-msg').value.trim();
+  const lat = parseFloat(document.getElementById('hazard-lat').value);
+  const lng = parseFloat(document.getElementById('hazard-lng').value);
+
+  if (!msgText) {
+    alert('Please enter a Hazard description.');
+    return;
+  }
+
+  try {
+    const res = await API.broadcastHazard(msgText, lat, lng);
+    alert(`Hazard Alert Broadcast Queued!\nID: ${res.message_id}\nMessage: ${msgText}`);
+  } catch (err) {
+    alert('Failed to broadcast hazard: ' + err.message);
   }
 }
 
@@ -197,6 +254,9 @@ async function submitSimulatedPacket() {
   const payload = {
     packet_id: packetId,
     node_id: nodeId,
+    source_node_id: nodeId,
+    previous_hop_id: nodeId,
+    destination_id: 'GATEWAY',
     packet_type: pType,
     battery: battery
   };
@@ -216,7 +276,7 @@ async function submitSimulatedPacket() {
   try {
     const res = await API.sendPacket(payload);
     closeSimulateModal();
-    alert(`Success! ACK received.\nMessage: ${res.message}`);
+    alert(`Success! Packet processed by Gateway.\nMessage: ${res.message}`);
     await refreshStats();
     await refreshNodes();
     await refreshEmergencies();
@@ -240,6 +300,7 @@ function setupWebSocket() {
       const msg = JSON.parse(event.data);
       console.log('WebSocket message received:', msg);
       refreshStats();
+      refreshGatewayStatus();
       refreshNodes();
       refreshEmergencies();
     } catch (e) {

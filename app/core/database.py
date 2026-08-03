@@ -1,14 +1,6 @@
-# Database configuration using PostgreSQL + SQLAlchemy
-
 from collections.abc import Generator
-from pathlib import Path
-import sys
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
-
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
 from app.core.config import settings
@@ -22,6 +14,8 @@ engine = create_engine(
     settings.database_url,
     echo=settings.debug,
     pool_pre_ping=True,
+    pool_size=10,
+    max_overflow=20,
 )
 
 
@@ -36,8 +30,7 @@ SessionLocal = sessionmaker(
 
 def get_db() -> Generator[Session, None, None]:
     """
-    Dependency for FastAPI routes.
-    Creates a database session and closes it automatically.
+    FastAPI dependency that provides a transactional PostgreSQL session.
     """
     db = SessionLocal()
     try:
@@ -48,9 +41,7 @@ def get_db() -> Generator[Session, None, None]:
 
 def create_tables() -> None:
     """
-    Creates all tables defined in SQLAlchemy models and applies schema migrations if needed.
+    Creates all tables defined in SQLAlchemy models if they do not exist.
     """
+    import app.models  # noqa: F401
     Base.metadata.create_all(bind=engine)
-    with engine.connect() as conn:
-        conn.execute(text("ALTER TABLE nodes ADD COLUMN IF NOT EXISTS packet_type VARCHAR(50);"))
-        conn.commit()

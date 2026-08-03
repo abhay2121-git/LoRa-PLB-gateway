@@ -1,3 +1,7 @@
+"""
+LoRa PLB Gateway — Entry Point
+Run with: python run.py
+"""
 import uvicorn
 from app.core.config import settings
 
@@ -7,4 +11,5 @@ if __name__ == "__main__":
         host=settings.host,
         port=settings.port,
         reload=settings.debug,
+        log_level=settings.log_level.lower(),
     )

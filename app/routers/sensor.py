@@ -17,8 +17,8 @@ router = APIRouter(
     status_code=status.HTTP_200_OK,
 )
 def get_sensor_logs(
-    limit: int = Query(default=100, ge=1, le=500),
-    offset: int = Query(default=0, ge=0),
+    limit: int = 100,
+    offset: int = 0,
     db: Session = Depends(get_db),
 ):
     """

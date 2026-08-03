@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.orm import Session, selectinload
 from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from app import crud, models
 from app.core.database import get_db
@@ -18,8 +18,8 @@ router = APIRouter(
     status_code=status.HTTP_200_OK,
 )
 def get_all_emergencies(
-    limit: int = Query(default=100, ge=1, le=500),
-    offset: int = Query(default=0, ge=0),
+    limit: int = 100,
+    offset: int = 0,
     db: Session = Depends(get_db),
 ):
     """
@@ -33,7 +33,7 @@ def get_all_emergencies(
         .offset(offset)
     )
     events = list(db.scalars(stmt).all())
-    
+
     result = []
     for event in events:
         resp = EmergencyEventResponse.model_validate(event)
@@ -50,9 +50,12 @@ def get_all_emergencies(
             resp.heart_rate = s_log.heart_rate
             resp.spo2 = s_log.spo2
             resp.temperature = s_log.temperature
-        elif event.node:
-            resp.battery = event.node.battery
-            
+        else:
+            # Fallback: get battery from node table
+            node = crud.get_node_by_node_id(db=db, node_id=event.node_id)
+            if node:
+                resp.battery = node.battery
+
         result.append(resp)
 
     return result

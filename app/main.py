@@ -1,11 +1,6 @@
 import asyncio
 from contextlib import asynccontextmanager
 from pathlib import Path
-import sys
-
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -16,19 +11,24 @@ from app.api.packets import router as packets_router
 from app.core.config import settings
 from app.core.database import SessionLocal, create_tables
 from app.core.logger import logger, setup_logging
+from app.drivers.lora_manager import lora_manager
+from app.queues import ack_queue, outbound_queue
 from app.routers.dashboard import router as dashboard_router
 from app.routers.emergency import router as emergency_router
+from app.routers.gateway import router as gateway_router
 from app.routers.nodes import router as nodes_router
+from app.routers.outbound import router as outbound_router
 from app.routers.sensor import router as sensor_router
 from app.routers.stats import router as stats_router
 from app.routers.websocket import router as websocket_router
+from app.services.lora_receiver import lora_receiver
 from app.services.node_manager import check_offline_nodes
 
 
 async def periodic_node_timeout_checker():
     """
     Background task checking for nodes that haven't sent a heartbeat/packet in 15 minutes.
-    Runs every 60 seconds.
+    Runs every 60 seconds (Requirement 10).
     """
     while True:
         try:
@@ -56,16 +56,31 @@ async def lifespan(app: FastAPI):
     logger.info(f"Gateway Application Started: {settings.app_name} v{settings.app_version}")
     logger.info(f"Gateway ID: {settings.gateway_id}")
 
-    # Start background node offline checker task
+    # 1. Initialize LoRa Hardware & Start SPI Receiver (Requirement 5 & 21)
+    await lora_receiver.start()
+
+    # 2. Start ACK Queue & Outbound Queue Workers (Requirement 7 & 8)
+    await ack_queue.start()
+    await outbound_queue.start()
+
+    # 3. Start Background Node Offline Checker Task (Requirement 10)
     checker_task = asyncio.create_task(periodic_node_timeout_checker())
 
     yield
 
+    # Shutdown sequence
+    logger.info("Initiating Gateway Application Graceful Shutdown...")
     checker_task.cancel()
     try:
         await checker_task
     except asyncio.CancelledError:
         pass
+
+    await ack_queue.stop()
+    await outbound_queue.stop()
+    await lora_receiver.stop()
+    await lora_manager.shutdown()
+
     logger.info("Gateway Application Shutdown Complete.")
 
 
@@ -75,7 +90,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Enable CORS for frontend client interactions
+# Enable CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -96,6 +111,8 @@ app.include_router(nodes_router)
 app.include_router(emergency_router)
 app.include_router(sensor_router)
 app.include_router(stats_router)
+app.include_router(gateway_router)
+app.include_router(outbound_router)
 app.include_router(websocket_router)
 
 

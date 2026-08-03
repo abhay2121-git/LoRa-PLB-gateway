@@ -17,6 +17,12 @@ const API = {
     return res.json();
   },
 
+  async getGatewayStatus() {
+    const res = await fetch('/api/gateway/status');
+    if (!res.ok) throw new Error('Failed to fetch gateway status');
+    return res.json();
+  },
+
   async sendPacket(packetData) {
     const res = await fetch('/api/packets/', {
       method: 'POST',
@@ -37,6 +43,32 @@ const API = {
       body: JSON.stringify({ remarks })
     });
     if (!res.ok) throw new Error('Failed to resolve emergency');
+    return res.json();
+  },
+
+  async sendStatusMessage(destinationNode, message) {
+    const res = await fetch('/api/outbound/status-message', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ destination_node: destinationNode, message: message })
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || 'Failed to send status message');
+    }
+    return res.json();
+  },
+
+  async broadcastHazard(message, latitude, longitude) {
+    const res = await fetch('/api/outbound/hazard-broadcast', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: message, latitude: latitude, longitude: longitude })
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || 'Failed to broadcast hazard');
+    }
     return res.json();
   }
 };

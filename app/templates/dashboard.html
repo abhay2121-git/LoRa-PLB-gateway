@@ -13,11 +13,14 @@
   <header class="header-nav">
     <div class="logo-section">
       <div class="logo-icon">PLB</div>
-      <div class="logo-text">LoRa PLB Gateway</div>
+      <div>
+        <div class="logo-text">LoRa PLB Gateway</div>
+        <div style="font-size: 0.75rem; color: var(--text-secondary);">Raspberry Pi 4 • SX1278 433MHz</div>
+      </div>
     </div>
     <div class="status-pills">
       <a href="/docs" target="_blank" class="pill" style="text-decoration: none; color: var(--accent-blue);">
-        <span>📖 API Docs (/docs)</span>
+        <span>📖 API Docs</span>
       </a>
       <button class="btn btn-primary" onclick="openSimulateModal()" style="display: flex; align-items: center; gap: 0.4rem;">
         <span>⚡ Simulate Packet</span>
@@ -49,15 +52,55 @@
         <div class="metric-title">Active Emergencies</div>
         <div class="metric-value" style="color: var(--accent-red);" id="stat-active-emergencies">0</div>
       </div>
+      <div class="metric-card">
+        <div class="metric-title">Delivery Confirmations</div>
+        <div class="metric-value" style="color: var(--accent-blue);" id="stat-deliv-confirmations">0</div>
+      </div>
     </div>
 
-    <!-- SECTION 1: LIVE NODE MONITORING -->
+    <!-- REQUIREMENT 20: LORA NETWORK MONITOR -->
     <section class="section-card">
       <div class="section-header">
         <h2 class="section-title">
-          <span>📡</span> Live Node Monitoring
+          <span>📡</span> LoRa Network Monitor
         </h2>
-        <span class="badge badge-hb">Real-Time State</span>
+        <span class="badge badge-hb">SX1278 SPI Interface</span>
+      </div>
+      <div class="lora-monitor-grid">
+        <div class="lora-metric-item">
+          <div class="lora-label">Frequency</div>
+          <div class="lora-val" id="lora-freq">433.0 MHz</div>
+        </div>
+        <div class="lora-metric-item">
+          <div class="lora-label">Current RSSI</div>
+          <div class="lora-val" id="lora-rssi">-95 dBm</div>
+        </div>
+        <div class="lora-metric-item">
+          <div class="lora-label">Current SNR</div>
+          <div class="lora-val" id="lora-snr">8.5 dB</div>
+        </div>
+        <div class="lora-metric-item">
+          <div class="lora-label">Packets / Sec</div>
+          <div class="lora-val" id="lora-rate">0.0</div>
+        </div>
+        <div class="lora-metric-item">
+          <div class="lora-label">ACK Success Rate</div>
+          <div class="lora-val" style="color: var(--accent-green);" id="lora-ack-rate">99.8%</div>
+        </div>
+        <div class="lora-metric-item">
+          <div class="lora-label">Delivery Success Rate</div>
+          <div class="lora-val" style="color: var(--accent-blue);" id="lora-deliv-rate">100.0%</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 1: LIVE NODE MONITORING (Requirement 19) -->
+    <section class="section-card">
+      <div class="section-header">
+        <h2 class="section-title">
+          <span>📶</span> Live Node Monitoring
+        </h2>
+        <span class="badge badge-online">Real-Time Telemetry</span>
       </div>
       <div class="table-wrapper">
         <table>
@@ -67,24 +110,83 @@
               <th>Status</th>
               <th>Battery</th>
               <th>Last Seen</th>
-              <th>Last Packet Type</th>
-              <th>Connectivity</th>
+              <th>GPS Location</th>
+              <th>RSSI / SNR</th>
+              <th>Current Emergency</th>
+              <th>Last Packet</th>
             </tr>
           </thead>
           <tbody id="nodes-table-body">
             <tr>
-              <td colspan="6" style="text-align:center; color: var(--text-secondary);">Loading node state...</td>
+              <td colspan="8" style="text-align:center; color: var(--text-secondary);">Loading registered wearable nodes...</td>
             </tr>
           </tbody>
         </table>
       </div>
     </section>
 
-    <!-- SECTION 2: EMERGENCY HISTORY -->
+    <!-- REQUIREMENT 18: DASHBOARD OPERATOR CONTROL PANEL -->
     <section class="section-card">
       <div class="section-header">
         <h2 class="section-title">
-          <span>🚨</span> Emergency History
+          <span>📢</span> Dashboard Operator Control (Status Messages & Hazard Broadcast)
+        </h2>
+        <span class="badge badge-hb">Gateway Transmit</span>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+
+        <!-- Status Message Panel -->
+        <div class="operator-panel">
+          <h3>Send Status Message to Node</h3>
+          <div class="form-group" style="margin-top: 0.75rem;">
+            <label for="outbound-dest-node">Target Node ID</label>
+            <input type="text" id="outbound-dest-node" class="form-control" placeholder="e.g. NODE_01">
+          </div>
+          <div class="form-group">
+            <label for="outbound-msg-preset">Predefined Operator Message</label>
+            <select id="outbound-msg-preset" class="form-control">
+              <option value="Rescue Team Dispatched">Rescue Team Dispatched</option>
+              <option value="Medical Team Arriving">Medical Team Arriving</option>
+              <option value="Stay Calm">Stay Calm</option>
+              <option value="Hazard Cleared">Hazard Cleared</option>
+              <option value="Evacuate Area">Evacuate Area</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" onclick="submitStatusMessage()" style="width: 100%;">
+            📤 Transmit Status Message
+          </button>
+        </div>
+
+        <!-- Hazard Broadcast Panel -->
+        <div class="operator-panel">
+          <h3>Broadcast Hazard Alert</h3>
+          <div class="form-group" style="margin-top: 0.75rem;">
+            <label for="hazard-msg">Hazard Warning Description</label>
+            <input type="text" id="hazard-msg" class="form-control" placeholder="e.g. Forest Fire reported near Sector B">
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+            <div class="form-group">
+              <label for="hazard-lat">Latitude</label>
+              <input type="number" step="0.0001" id="hazard-lat" class="form-control" value="21.1458">
+            </div>
+            <div class="form-group">
+              <label for="hazard-lng">Longitude</label>
+              <input type="number" step="0.0001" id="hazard-lng" class="form-control" value="79.0882">
+            </div>
+          </div>
+          <button class="btn" style="background: var(--accent-orange); color: #fff; width: 100%;" onclick="submitHazardBroadcast()">
+            ⚠️ Broadcast Hazard Alert
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECTION 2: EMERGENCY HISTORY (Requirement 3 & 17) -->
+    <section class="section-card">
+      <div class="section-header">
+        <h2 class="section-title">
+          <span>🚨</span> Emergency History & Delivery Confirmation Status
         </h2>
         <span class="badge badge-emergency">SOS / FALL / HAZARD Events</span>
       </div>
@@ -97,16 +199,15 @@
               <th>GPS Coordinates</th>
               <th>Timestamp</th>
               <th>Battery</th>
-              <th>Heart Rate</th>
-              <th>Temp</th>
-              <th>SpO2</th>
+              <th>Vitals (HR / SpO2 / Temp)</th>
               <th>Remarks</th>
-              <th>Status</th>
+              <th>Delivery Confirmation</th>
+              <th>Status Action</th>
             </tr>
           </thead>
           <tbody id="emergencies-table-body">
             <tr>
-              <td colspan="10" style="text-align:center; color: var(--text-secondary);">Loading emergency history...</td>
+              <td colspan="9" style="text-align:center; color: var(--text-secondary);">Loading emergency events history...</td>
             </tr>
           </tbody>
         </table>
@@ -118,7 +219,7 @@
   <!-- Packet Simulation Modal -->
   <div class="modal-overlay" id="simulate-modal">
     <div class="modal-content" style="max-width: 550px;">
-      <div class="modal-header">⚡ Simulate Incoming Sensor Packet</div>
+      <div class="modal-header">⚡ Simulate Incoming LoRa Packet</div>
       
       <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
         <button class="btn" style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; flex: 1;" onclick="fillPreset('HEARTBEAT')">Heartbeat</button>
@@ -130,10 +231,10 @@
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
         <div class="form-group">
           <label for="sim-packet-id">Packet ID</label>
-          <input type="text" id="sim-packet-id" class="form-control" placeholder="HB-001 or PKT-1001">
+          <input type="text" id="sim-packet-id" class="form-control" placeholder="PKT-1001">
         </div>
         <div class="form-group">
-          <label for="sim-node-id">Node ID</label>
+          <label for="sim-node-id">Source Node ID</label>
           <input type="text" id="sim-node-id" class="form-control" placeholder="NODE_01">
         </div>
       </div>
