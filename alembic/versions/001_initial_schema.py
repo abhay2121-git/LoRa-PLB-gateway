@@ -50,7 +50,6 @@ def upgrade() -> None:
         sa.Column('heart_rate', sa.Integer(), nullable=True),
         sa.Column('spo2', sa.Float(), nullable=True),
         sa.Column('temperature', sa.Float(), nullable=True),
-        sa.Column('fall_detected', sa.Boolean(), nullable=False, server_default='false'),
         sa.Column('sos', sa.Boolean(), nullable=False, server_default='false'),
         sa.Column('battery', sa.Float(), nullable=False),
         sa.Column('timestamp', sa.DateTime(timezone=True), nullable=False),

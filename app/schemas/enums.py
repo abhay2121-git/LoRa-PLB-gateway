@@ -4,8 +4,8 @@ from enum import Enum
 class PacketType(str, Enum):
     HEARTBEAT = "HEARTBEAT"
     SOS = "SOS"
-    FALL = "FALL"
     HAZARD = "HAZARD"
+    MESSAGE = "MESSAGE"
     ACK = "ACK"
     DELIVERY_CONFIRMATION = "DELIVERY_CONFIRMATION"
     STATUS_MESSAGE = "STATUS_MESSAGE"

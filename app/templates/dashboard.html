@@ -188,7 +188,7 @@
         <h2 class="section-title">
           <span>🚨</span> Emergency History & Delivery Confirmation Status
         </h2>
-        <span class="badge badge-emergency">SOS / FALL / HAZARD Events</span>
+        <span class="badge badge-emergency">SOS / HAZARD / MESSAGE Events</span>
       </div>
       <div class="table-wrapper">
         <table>
@@ -224,7 +224,7 @@
       <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
         <button class="btn" style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; flex: 1;" onclick="fillPreset('HEARTBEAT')">Heartbeat</button>
         <button class="btn" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; flex: 1;" onclick="fillPreset('SOS')">SOS Emergency</button>
-        <button class="btn" style="background: rgba(249, 115, 22, 0.2); color: #f97316; flex: 1;" onclick="fillPreset('FALL')">Fall Event</button>
+        <button class="btn" style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; flex: 1;" onclick="fillPreset('MESSAGE')">Message</button>
         <button class="btn" style="background: rgba(234, 179, 8, 0.2); color: #eab308; flex: 1;" onclick="fillPreset('HAZARD')">Hazard Warning</button>
       </div>
 
@@ -245,7 +245,7 @@
           <select id="sim-packet-type" class="form-control" onchange="toggleEmergencyFields()">
             <option value="HEARTBEAT">HEARTBEAT</option>
             <option value="SOS">SOS</option>
-            <option value="FALL">FALL</option>
+            <option value="MESSAGE">MESSAGE</option>
             <option value="HAZARD">HAZARD</option>
           </select>
         </div>

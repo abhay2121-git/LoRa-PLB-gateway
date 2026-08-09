@@ -99,7 +99,7 @@ class PacketProcessor:
                     message=f"Heartbeat received for Node {node_id}. Status updated to ONLINE.",
                 )
 
-            # Step 4: Category 2 — EMERGENCY PACKETS (SOS, FALL, HAZARD) (Requirement 11)
+            # Step 4: Category 2 — EMERGENCY PACKETS (SOS, HAZARD, MESSAGE) (Requirement 11)
             emergency = detect_emergency(packet)
 
             # Emergency DB Pipeline: Node -> SensorLog -> PacketLog -> EmergencyEvent (Requirement 11)

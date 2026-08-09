@@ -66,12 +66,6 @@ class SensorLog(Base):
         nullable=True,
     )
 
-    fall_detected: Mapped[bool] = mapped_column(
-        Boolean,
-        default=False,
-        nullable=False,
-    )
-
     sos: Mapped[bool] = mapped_column(
         Boolean,
         default=False,

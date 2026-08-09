@@ -47,7 +47,7 @@ def test_schema() -> None:
         heart_rate=148,
         spo2=92,
         temperature=38.9,
-        fall_detected=True,
+        message="status update",
         sos=True,
         battery=67,
         retry_count=0,

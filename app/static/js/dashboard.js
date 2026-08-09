@@ -100,7 +100,7 @@ async function refreshEmergencies() {
     }
 
     tbody.innerHTML = emergencies.map(emg => {
-      const badgeClass = emg.event_type === 'SOS' ? 'badge-sos' : (emg.event_type === 'FALL' ? 'badge-fall' : 'badge-hazard');
+      const badgeClass = emg.event_type === 'SOS' ? 'badge-sos' : 'badge-hazard';
       const gpsStr = (emg.latitude && emg.longitude) ? `${emg.latitude.toFixed(4)}, ${emg.longitude.toFixed(4)}` : 'N/A';
       const timestamp = new Date(emg.timestamp).toLocaleString();
       const vitalsStr = `HR: ${emg.heart_rate || '-'} | SpO2: ${emg.spo2 || '-'}% | Temp: ${emg.temperature || '-'}°C`;
@@ -234,7 +234,7 @@ function fillPreset(type) {
     document.getElementById('sim-packet-id').value = `PKT-${randNum}`;
     document.getElementById('sim-latitude').value = (21.14 + (Math.random() * 0.05)).toFixed(4);
     document.getElementById('sim-longitude').value = (79.08 + (Math.random() * 0.05)).toFixed(4);
-    document.getElementById('sim-hr').value = type === 'SOS' ? 145 : (type === 'FALL' ? 128 : 110);
+    document.getElementById('sim-hr').value = type === 'SOS' ? 145 : 110;
     document.getElementById('sim-spo2').value = Math.floor(Math.random() * 6) + 92;
     document.getElementById('sim-temp').value = (37.0 + Math.random() * 2.5).toFixed(1);
   }
@@ -270,7 +270,7 @@ async function submitSimulatedPacket() {
     payload.spo2 = parseFloat(document.getElementById('sim-spo2').value);
     payload.temperature = parseFloat(document.getElementById('sim-temp').value);
     payload.sos = pType === 'SOS';
-    payload.fall_detected = pType === 'FALL';
+    payload.message = pType === 'MESSAGE' ? 'status update' : '';
   }
 
   try {

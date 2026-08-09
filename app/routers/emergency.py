@@ -23,7 +23,7 @@ def get_all_emergencies(
     db: Session = Depends(get_db),
 ):
     """
-    Get all emergency history records (SOS, FALL, HAZARD).
+    Get all emergency history records (SOS, HAZARD, MESSAGE).
     Populates latest vitals from sensor_logs.
     """
     stmt = (

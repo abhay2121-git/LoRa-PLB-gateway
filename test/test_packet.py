@@ -26,7 +26,21 @@ def test_sos_schema_validation():
     assert sos.emergency_id is not None
 
 
+def test_message_schema_validation():
+    message_packet = SensorPacketCreate(
+        packet_id="PKT-0002",
+        node_id="NODE_01",
+        packet_type=PacketType.MESSAGE,
+        battery=61.0,
+        message="hazard at checkpoint 3",
+    )
+    assert message_packet.packet_type == PacketType.MESSAGE
+    assert message_packet.message == "hazard at checkpoint 3"
+    assert not hasattr(message_packet, "fall_detected")
+
+
 if __name__ == "__main__":
     test_heartbeat_schema_validation()
     test_sos_schema_validation()
+    test_message_schema_validation()
     print("Packet schema unit tests passed.")

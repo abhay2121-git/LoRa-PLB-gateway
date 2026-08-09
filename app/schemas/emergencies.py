@@ -13,7 +13,6 @@ class SensorLogResponse(BaseModel):
     heart_rate: int | None = None
     spo2: float | None = None
     temperature: float | None = None
-    fall_detected: bool
     sos: bool
     battery: float
     timestamp: datetime

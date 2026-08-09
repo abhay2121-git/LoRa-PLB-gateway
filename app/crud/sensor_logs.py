@@ -7,7 +7,7 @@ from app.schemas import SensorPacketCreate
 
 def create_sensor_log(db: Session, packet: SensorPacketCreate) -> models.SensorLog:
     """
-    Created ONLY for EMERGENCY packets (SOS, FALL, HAZARD).
+    Created ONLY for EMERGENCY packets (SOS, HAZARD, MESSAGE).
     """
     node_id = packet.source_node_id or packet.node_id
     sensor_log = models.SensorLog(
@@ -20,7 +20,6 @@ def create_sensor_log(db: Session, packet: SensorPacketCreate) -> models.SensorL
         heart_rate=packet.heart_rate,
         spo2=packet.spo2,
         temperature=packet.temperature,
-        fall_detected=packet.fall_detected,
         sos=packet.sos,
         battery=packet.battery,
     )

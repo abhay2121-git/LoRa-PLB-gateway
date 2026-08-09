@@ -22,7 +22,7 @@ class SensorPacketCreate(BaseModel):
     spo2: float | None = Field(default=None, ge=0, le=100)
     temperature: float | None = Field(default=None, ge=20, le=50)
 
-    fall_detected: bool = False
+    message: str | None = Field(default=None, max_length=255)
     sos: bool = False
     retry_count: int = Field(default=0, ge=0)
     timestamp: datetime | None = None
@@ -47,16 +47,16 @@ class SensorPacketCreate(BaseModel):
         if self.packet_type == PacketType.SOS and not self.sos:
             self.sos = True
 
-        if self.packet_type == PacketType.FALL and not self.fall_detected:
-            self.fall_detected = True
-
-        if self.packet_type in (PacketType.SOS, PacketType.FALL, PacketType.HAZARD):
+        if self.packet_type in (PacketType.SOS, PacketType.HAZARD):
             if not self.emergency_id:
                 self.emergency_id = f"EMG-{self.source_node_id}-{self.packet_id}"
             if self.latitude is None:
                 self.latitude = 0.0
             if self.longitude is None:
                 self.longitude = 0.0
+
+        if self.packet_type == PacketType.MESSAGE and not self.message:
+            self.message = ""
 
         return self
 

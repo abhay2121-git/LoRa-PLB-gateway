@@ -25,13 +25,6 @@ def detect_emergency(packet: SensorPacketCreate) -> EmergencyResult:
             remarks="Manual SOS distress button activated.",
         )
 
-    if packet.packet_type == PacketType.FALL:
-        return EmergencyResult(
-            is_emergency=True,
-            event_type="FALL",
-            remarks="Automatic fall detection triggered by wearable node.",
-        )
-
     if packet.packet_type == PacketType.HAZARD:
         return EmergencyResult(
             is_emergency=True,
