@@ -10,7 +10,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from app.core.config import settings
 from app.core.database import create_tables, engine
 import app.models  # noqa: F401
-from app.schemas import SensorPacketCreate
+from app.schemas import PacketType, SensorPacketCreate
 
 
 def test_configuration() -> None:
@@ -42,6 +42,7 @@ def test_schema() -> None:
     packet = SensorPacketCreate(
         packet_id="PKT-1001",
         node_id="NODE_04",
+        packet_type=PacketType.SOS,
         latitude=21.1458,
         longitude=79.0882,
         heart_rate=148,
