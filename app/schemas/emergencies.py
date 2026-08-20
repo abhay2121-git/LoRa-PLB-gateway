@@ -26,6 +26,8 @@ class EmergencyEventResponse(BaseModel):
     emergency_id: str
     node_id: str
     event_type: str
+    priority_code: int | None = None
+    priority: str | None = None
     latitude: float
     longitude: float
     last_sequence_number: int

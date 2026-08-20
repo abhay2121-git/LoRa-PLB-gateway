@@ -1,0 +1,1 @@
+"""Lightweight in-process priority inference for resolved gateway packets."""

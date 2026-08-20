@@ -24,6 +24,8 @@ def create_or_update_emergency_event(
     packet: SensorPacketCreate,
     event_type: str,
     remarks: str | None = None,
+    priority_code: int | None = None,
+    priority_label: str | None = None,
 ) -> models.EmergencyEvent:
     node_id = packet.source_node_id or packet.node_id
     emergency_id = packet.emergency_id or f"EMG-{node_id}-{packet.packet_id}"
@@ -36,6 +38,8 @@ def create_or_update_emergency_event(
             emergency_id=emergency_id,
             node_id=node_id,
             event_type=event_type,
+            priority_code=priority_code,
+            priority_label=priority_label,
             latitude=packet.latitude or 0.0,
             longitude=packet.longitude or 0.0,
             last_sequence_number=seq_num,
@@ -47,6 +51,10 @@ def create_or_update_emergency_event(
         emergency_event.latitude = packet.latitude or emergency_event.latitude
         emergency_event.longitude = packet.longitude or emergency_event.longitude
         emergency_event.last_sequence_number = seq_num
+        if priority_code is not None:
+            emergency_event.priority_code = priority_code
+        if priority_label is not None:
+            emergency_event.priority_label = priority_label
         emergency_event.updated_at = utc_now()
 
     db.flush()

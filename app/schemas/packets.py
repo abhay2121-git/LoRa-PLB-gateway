@@ -25,6 +25,7 @@ class SensorPacketCreate(BaseModel):
     message: str | None = Field(default=None, max_length=255)
     sos: bool = False
     retry_count: int = Field(default=0, ge=0)
+    hop_count: int = Field(default=1, ge=0)
     timestamp: datetime | None = None
 
     @model_validator(mode="after")
@@ -71,6 +72,9 @@ class PacketProcessingResult(BaseModel):
     sequence_number: int | None = None
     emergency_detected: bool = False
     emergency_type: str | None = None
+    priority_code: int | None = None
+    priority: str | None = None
+    priority_error: str | None = None
     ack_status: bool = True
     delivery_confirmation_sent: bool = False
     message: str = ""

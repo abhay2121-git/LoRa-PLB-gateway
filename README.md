@@ -412,6 +412,30 @@ python test_gateway_processing.py
 ```
 *Simulates incoming Heartbeat packets, emergency SOS distress signals, and duplicate retransmission filtering.*
 
+### 3. AI Priority Engine
+
+The deployed priority engine runs in-process after packet validation, duplicate checking, and gateway interpretation. `HEARTBEAT` packets bypass inference. A `MESSAGE` whose predefined text is `SOS` or `HAZARD` is resolved before the model; ordinary messages remain `MESSAGE`.
+
+The model receives `packet_type`, `heart_rate`, `spo2`, `battery`, `retry_count`, and `hop_count`. `packet_type` uses protocol codes SOS=`1`, HAZARD=`2`, MESSAGE=`3` and is one-hot encoded by the exported preprocessing artifact. Predictions are returned as both `priority_code` and `priority`, mapped as `1=LOW`, `2=MEDIUM`, `3=HIGH`, `4=CRITICAL`.
+
+Training is external to `app/ml/` and does not run when the gateway starts:
+
+```bash
+python ml-training/train.py --dataset path/to/priority_dataset.xlsx --output-dir .
+python ml-training/evaluate.py --dataset path/to/priority_dataset.xlsx
+```
+
+For development-only pipeline checks, synthetic data must be explicitly requested:
+
+```bash
+python ml-training/train.py --synthetic --output-dir .
+python ml-training/evaluate.py --synthetic
+```
+
+Synthetic metrics are not medical, scientific, or operational validation. Replace the dataset before deployment. Copy the resulting `priority_model.pkl` and `preprocessor.pkl` together to the Raspberry Pi. The gateway caches both trusted local artifacts and reports inference errors without assigning a fake priority.
+
+Priority is exposed in the packet-processing API response and dashboard WebSocket event. It is also persisted as nullable `priority_code` and `priority_label` fields on `emergency_events`, then displayed in the Emergency History table. Existing events created before the migration have no priority value and display `-`.
+
 ---
 
 ## ⚙️ Configuration Settings

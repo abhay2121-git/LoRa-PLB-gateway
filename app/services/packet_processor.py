@@ -3,6 +3,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app import crud
+from app.ml.inference import infer_priority, resolve_packet_type
 from app.schemas import PacketProcessingResult, PacketType, SensorPacketCreate
 from app.services.ack_service import AckService
 from app.services.delivery_confirmation_service import DeliveryConfirmationService
@@ -72,6 +73,9 @@ class PacketProcessor:
             # Register packet_id in duplicate detector memory set
             await duplicate_detector.register(packet.packet_id)
 
+            # Resolve predefined MESSAGE values before emergency handling.
+            packet = resolve_packet_type(packet)
+
             # Step 3: Category 1 — HEARTBEAT PACKETS (Requirement 10)
             if packet.packet_type == PacketType.HEARTBEAT:
                 crud.update_node_heartbeat(db=db, packet=packet, rssi=rssi, snr=snr)
@@ -101,12 +105,27 @@ class PacketProcessor:
 
             # Step 4: Category 2 — EMERGENCY PACKETS (SOS, HAZARD, MESSAGE) (Requirement 11)
             emergency = detect_emergency(packet)
+            priority_code = None
+            priority = None
+            priority_error = None
+            try:
+                priority_result = infer_priority(packet)
+                priority_code = priority_result["priority_code"]
+                priority = priority_result["priority"]
+            except Exception as exc:
+                priority_error = str(exc)
+                logger.error("Priority engine unavailable for packet %s: %s", packet.packet_id, exc)
 
             # Emergency DB Pipeline: Node -> SensorLog -> PacketLog -> EmergencyEvent (Requirement 11)
             crud.create_or_update_node_emergency(db=db, packet=packet, rssi=rssi, snr=snr)
             crud.create_sensor_log(db=db, packet=packet)
             crud.create_or_update_emergency_event(
-                db=db, packet=packet, event_type=emergency.event_type or packet.packet_type.value, remarks=emergency.remarks
+                db=db,
+                packet=packet,
+                event_type=emergency.event_type or packet.packet_type.value,
+                remarks=emergency.remarks,
+                priority_code=priority_code,
+                priority_label=priority,
             )
             packet_log = crud.create_packet_log(db=db, packet=packet, rssi=rssi, snr=snr)
 
@@ -139,6 +158,8 @@ class PacketProcessor:
                     "emergency_id": packet.emergency_id,
                     "latitude": packet.latitude,
                     "longitude": packet.longitude,
+                    "priority_code": priority_code,
+                    "priority": priority,
                 },
             )
 
@@ -154,6 +175,9 @@ class PacketProcessor:
                 emergency_type=emergency.event_type,
                 ack_status=packet_log.ack_status,
                 delivery_confirmation_sent=True,
+                priority_code=priority_code,
+                priority=priority,
+                priority_error=priority_error,
                 message=f"Emergency packet {packet.packet_type.value} processed & stored successfully.",
             )
 

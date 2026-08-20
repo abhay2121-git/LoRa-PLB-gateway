@@ -37,6 +37,7 @@ def get_all_emergencies(
     result = []
     for event in events:
         resp = EmergencyEventResponse.model_validate(event)
+        resp.priority = event.priority_label
         # Fetch latest sensor log for vitals
         sensor_stmt = (
             select(models.SensorLog)
@@ -74,6 +75,7 @@ def get_active_emergencies(db: Session = Depends(get_db)):
     result = []
     for event in events:
         resp = EmergencyEventResponse.model_validate(event)
+        resp.priority = event.priority_label
         sensor_stmt = (
             select(models.SensorLog)
             .where(models.SensorLog.emergency_id == event.emergency_id)

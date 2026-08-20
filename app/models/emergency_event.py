@@ -37,6 +37,16 @@ class EmergencyEvent(Base):
         nullable=False,
     )
 
+    priority_code: Mapped[int | None] = mapped_column(
+        Integer,
+        nullable=True,
+    )
+
+    priority_label: Mapped[str | None] = mapped_column(
+        String(20),
+        nullable=True,
+    )
+
     latitude: Mapped[float] = mapped_column(
         Float,
         nullable=False,

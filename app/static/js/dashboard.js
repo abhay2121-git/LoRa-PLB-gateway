@@ -95,7 +95,7 @@ async function refreshEmergencies() {
     if (!tbody) return;
 
     if (emergencies.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color: var(--text-secondary);">No emergency events recorded. System operating normally.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; color: var(--text-secondary);">No emergency events recorded. System operating normally.</td></tr>`;
       return;
     }
 
@@ -115,6 +115,7 @@ async function refreshEmergencies() {
       return `
         <tr>
           <td><span class="badge ${badgeClass}">${emg.event_type}</span></td>
+          <td><span class="badge ${emg.priority === 'CRITICAL' ? 'badge-sos' : 'badge-hazard'}">${emg.priority || '-'}</span></td>
           <td><strong>${emg.node_id}</strong></td>
           <td>${gpsStr}</td>
           <td>${timestamp}</td>
@@ -276,7 +277,8 @@ async function submitSimulatedPacket() {
   try {
     const res = await API.sendPacket(payload);
     closeSimulateModal();
-    alert(`Success! Packet processed by Gateway.\nMessage: ${res.message}`);
+    const priorityText = res.priority ? `\nPriority: ${res.priority}` : '';
+    alert(`Success! Packet processed by Gateway.\nMessage: ${res.message}${priorityText}`);
     await refreshStats();
     await refreshNodes();
     await refreshEmergencies();
