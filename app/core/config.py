@@ -48,6 +48,9 @@ class Settings(BaseSettings):
     ack_queue_workers: int = 1
     outbound_queue_workers: int = 1
 
+    # Map & GIS Settings
+    maptiler_api_key: str = ""
+
     model_config = SettingsConfigDict(
         env_file=PROJECT_ROOT / ".env",
         env_file_encoding="utf-8",

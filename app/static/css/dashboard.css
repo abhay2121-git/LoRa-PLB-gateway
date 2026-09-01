@@ -40,3 +40,109 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   padding-bottom: 0.5rem;
 }
+
+/* PLB Map Styles */
+#plb-map-container {
+  width: 100%;
+  height: 500px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  margin-bottom: 1rem;
+  position: relative;
+  display: block;
+}
+
+#plb-map-container::before {
+  content: 'Loading map...';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  z-index: 1;
+}
+
+/* Hide loading message once map initializes */
+.leaflet-container::before {
+  display: none;
+}
+
+.plb-map-section {
+  width: 100%;
+}
+
+.node-marker {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.emergency-marker {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Leaflet overrides for dark theme */
+.leaflet-container {
+  background: #1e293b;
+  font-family: inherit;
+}
+
+.leaflet-control {
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.9) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: var(--text-primary);
+}
+
+.leaflet-control-layers {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.leaflet-control-layers-toggle {
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 30"><path fill="white" d="M3 3h24v6H3zm0 10h24v6H3zm0 10h24v6H3z"/></svg>');
+  width: 36px !important;
+  height: 36px !important;
+  background-size: 20px;
+}
+
+.leaflet-control-layers-list {
+  background: rgba(15, 23, 42, 0.95) !important;
+  border-radius: 8px;
+}
+
+.leaflet-control-layers label {
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.leaflet-popup-content-wrapper {
+  background: rgba(15, 23, 42, 0.95);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.leaflet-popup-content {
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.leaflet-popup-tip-container {
+  display: none;
+}

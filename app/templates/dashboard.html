@@ -6,6 +6,8 @@
   <title>{{ page_title }}</title>
   <link rel="stylesheet" href="/static/css/style.css">
   <link rel="stylesheet" href="/static/css/dashboard.css">
+  <!-- Leaflet CSS for interactive map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
 </head>
 <body>
 
@@ -92,6 +94,43 @@
           <div class="lora-val" style="color: var(--accent-blue);" id="lora-deliv-rate">100.0%</div>
         </div>
       </div>
+    </section>
+
+    <!-- PLB Interactive Map Section -->
+    <section class="section-card plb-map-section">
+      <div class="section-header">
+        <h2 class="section-title">
+          <span>🗺️</span> Live PLB Map
+        </h2>
+        <span class="badge badge-online">Interactive GIS</span>
+      </div>
+      <div id="plb-map-container"></div>
+      <!-- Locate on Map Toolbar -->
+      <div class="locate-toolbar">
+        <div class="locate-toolbar-title">📍 Locate on Map</div>
+        <div class="locate-toolbar-fields">
+          <div class="form-group">
+            <label for="locate-lat">Latitude</label>
+            <input type="number" step="0.0001" id="locate-lat" class="form-control" placeholder="e.g. 21.1458">
+          </div>
+          <div class="form-group">
+            <label for="locate-lng">Longitude</label>
+            <input type="number" step="0.0001" id="locate-lng" class="form-control" placeholder="e.g. 79.0882">
+          </div>
+          <div class="form-group">
+            <label for="locate-label">Label (optional)</label>
+            <input type="text" id="locate-label" class="form-control" placeholder="e.g. NODE_01 or Person Name">
+          </div>
+          <button class="btn btn-primary locate-btn" onclick="locateOnMap()">
+            🎯 Locate
+          </button>
+          <button class="btn locate-clear-btn" onclick="clearLocateMarker()">
+            ✕ Clear
+          </button>
+        </div>
+      </div>
+      <!-- Hidden input to pass MapTiler API key from server to client -->
+      <input type="hidden" id="maptiler-api-key" value="{{ maptiler_api_key }}">
     </section>
 
     <!-- SECTION 1: LIVE NODE MONITORING (Requirement 19) -->
@@ -308,5 +347,9 @@
 
   <script src="/static/js/api.js"></script>
   <script src="/static/js/dashboard.js?v=2"></script>
+  <!-- Leaflet JavaScript for interactive map -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <!-- PLB Map Module -->
+  <script src="/static/js/map.js"></script>
 </body>
 </html>
