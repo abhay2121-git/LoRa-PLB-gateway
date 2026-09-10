@@ -50,55 +50,65 @@
 
 ```mermaid
 flowchart TD
-    subgraph Field Devices
-        N1[LoRa Field Node 1<br/>(PLB / Tracker)]
-        N2[LoRa Field Node 2<br/>(Sensors / Vitals)]
-        N3[LoRa SOS Distress Beacon]
+    subgraph "Field Devices"
+        N1["LoRa Field Node 1
+        (PLB / Tracker)"]
+        N2["LoRa Field Node 2
+        (Sensors / Vitals)"]
+        N3["LoRa SOS Distress Beacon"]
     end
 
-    subgraph Hardware Layer
-        SX[Semtech SX1278 / SX1276<br/>LoRa Transceiver Module]
-        SPI[SPI Bus 0 / GPIO Interrupts<br/>(Raspberry Pi Header)]
+    subgraph "Hardware Layer"
+        SX["Semtech SX1278 / SX1276
+        LoRa Transceiver Module"]
+        SPI["SPI Bus 0 / GPIO Interrupts
+        (Raspberry Pi Header)"]
     end
 
-    subgraph Gateway Core Server (FastAPI)
-        RX[LoRa Receiver Service]
-        PARSER[Packet Parser & Validator]
-        DEDUP[Duplicate Detector<br/>(Sliding Window Cache)]
-        PROC[Packet Processor Engine]
-        EMG[Emergency Detection Engine]
-        NODE_MGR[Node Timeout Monitor<br/>(15-min Heartbeat Checker)]
-        ACK_Q[ACK Queue Worker]
-        OUT_Q[Outbound Queue Worker]
+    subgraph "Gateway Core Server (FastAPI)"
+        RX["LoRa Receiver Service"]
+        PARSER["Packet Parser & Validator"]
+        DEDUP["Duplicate Detector
+        (Sliding Window Cache)"]
+        PROC["Packet Processor Engine"]
+        EMG["Emergency Detection Engine"]
+        NODE_MGR["Node Timeout Monitor
+        (15-min Heartbeat Checker)"]
+        ACK_Q["ACK Queue Worker"]
+        OUT_Q["Outbound Queue Worker"]
     end
 
-    subgraph Storage & Communication
-        DB[(PostgreSQL Database<br/>SQLAlchemy 2.0 / Alembic)]
-        WS[WebSocket Manager<br/>(/ws Live Stream)]
+    subgraph "Storage & Communication"
+        DB[("PostgreSQL Database
+        SQLAlchemy 2.0 / Alembic")]
+        WS["WebSocket Manager
+        (/ws Live Stream)"]
     end
 
-    subgraph Operator UI & APIs
-        DASH[Web Dashboard<br/>(Live Command Center)]
-        REST[REST API Endpoints<br/>(/api/v1/...)]
+    subgraph "Operator UI & APIs"
+        DASH["Web Dashboard
+        (Live Command Center)"]
+        REST["REST API Endpoints
+        (/api/v1/...)"]
     end
 
-    N1 -- LoRa RF 433MHz --> SX
-    N2 -- LoRa RF 433MHz --> SX
-    N3 -- LoRa RF 433MHz --> SX
+    N1 -- "LoRa RF 433MHz" --> SX
+    N2 -- "LoRa RF 433MHz" --> SX
+    N3 -- "LoRa RF 433MHz" --> SX
 
-    SX -- SPI / GPIO --> SPI
+    SX -- "SPI / GPIO" --> SPI
     SPI --> RX
     RX --> PARSER
     PARSER --> DEDUP
     DEDUP --> PROC
     PROC --> EMG
     PROC --> DB
-    EMG -- Broadcast Alert --> WS
+    EMG -- "Broadcast Alert" --> WS
     WS --> DASH
 
     PROC --> ACK_Q
-    ACK_Q -- Downlink ACK --> SX
-    OUT_Q -- Outbound Command --> SX
+    ACK_Q -- "Downlink ACK" --> SX
+    OUT_Q -- "Outbound Command" --> SX
 
     NODE_MGR --> DB
     REST <--> DB
