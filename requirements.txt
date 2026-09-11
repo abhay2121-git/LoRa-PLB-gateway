@@ -1,21 +1,35 @@
+# ── Web Framework ────────────────────────────────────────────────────
 fastapi==0.116.1
 uvicorn[standard]==0.35.0
+pydantic==2.11.7
+pydantic-settings==2.10.1
 
+# ── Database & Migrations ───────────────────────────────────────────
 sqlalchemy==2.0.42
 psycopg[binary]==3.2.9
 alembic==1.14.1
 
-pydantic==2.11.7
-pydantic-settings==2.10.1
-
+# ── Templating & Forms ──────────────────────────────────────────────
 jinja2==3.1.6
 python-multipart==0.0.20
 
+# ── Config & Async I/O ──────────────────────────────────────────────
 python-dotenv==1.1.1
 aiofiles==24.1.0
+
+# ── Realtime & Serial ───────────────────────────────────────────────
 websockets==12.0
-spidev==3.6
+pyserial==3.5
+
+# ── Hardware Drivers (Raspberry Pi only — optional on dev machines) ─
+# spidev==3.6        # Uncomment on Raspberry Pi deployment
+# gpiod              # Uncomment on Raspberry Pi deployment
+
+# ── ML / Priority Engine ────────────────────────────────────────────
 scikit-learn==1.6.1
 pandas==2.2.3
 openpyxl==3.1.5
 
+# ── Testing ─────────────────────────────────────────────────────────
+pytest==9.1.1
+httpx==0.28.1
