@@ -6,8 +6,7 @@
 [![Hardware](https://img.shields.io/badge/Hardware-Semtech%20SX1278%20%2F%20SX1276-orange.svg)](https://www.semtech.com/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-**LoRa PLB Gateway** is an industrial-grade, low-power, long-range telemetry and emergency signal gateway designed for Search and Rescue (SAR), remote asset tracking, and personal safety monitoring. Built with **FastAPI**, **Semtech SX1278/SX1276 SPI hardware drivers**, **PostgreSQL**, and **WebSockets**, it provides real-time packet parsing, sliding-window deduplication, automatic SOS detection, down-link ACK queuing, node health monitoring, and a live web dashboard.
-
+LoRa PLB Gateway is an industrial-grade, low-power, long-range telemetry and emergency signal gateway designed for Search and Rescue (SAR), remote asset tracking, and personal safety monitoring in remote and challenging environments where conventional cellular or internet connectivity is unavailable. Built with FastAPI, Semtech SX1278/SX1276 SPI hardware drivers, PostgreSQL, and WebSockets, it provides real-time packet parsing, sliding-window deduplication, automatic SOS detection, AI-based emergency priority classification (LOW → MEDIUM → HIGH → CRITICAL), down-link ACK queuing, node health monitoring, multi-hop LoRa relay support, and a live web command center dashboard.
 ---
 
 ## 📋 Table of Contents
