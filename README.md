@@ -464,6 +464,15 @@ Priority is exposed in the packet-processing API response and dashboard WebSocke
 
 ---
 
+## 📸 Screenshots
+![Dashboard](C:\Users\Abhay\OneDrive\Desktop\lora-plb-gateway\docs\screenshots\live_nodes.png)
+![Satellite View](C:\Users\Abhay\OneDrive\Desktop\lora-plb-gateway\docs\screenshots\maps\satellite_view.png)
+![Live Map](C:\Users\Abhay\OneDrive\Desktop\lora-plb-gateway\docs\screenshots\maps\live_locations.png)
+![Emergency History](C:\Users\Abhay\OneDrive\Desktop\lora-plb-gateway\docs\screenshots\ai_based_priority_engine.png)
+![Simulate Packet](C:\Users\Abhay\OneDrive\Desktop\lora-plb-gateway\docs\screenshots\packet_simulation.png)
+
+---
+
 ## 📄 License
 
 This project is open-source software licensed under the [MIT License](LICENSE).
