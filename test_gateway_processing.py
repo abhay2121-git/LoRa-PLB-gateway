@@ -77,4 +77,3 @@ async def test_packet_processing() -> None:
 
 if __name__ == "__main__":
     asyncio.run(test_packet_processing())
-
