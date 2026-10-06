@@ -3,6 +3,7 @@
 from functools import lru_cache
 from pathlib import Path
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -19,8 +20,20 @@ class Settings(BaseSettings):
     port: int = 8000
 
     database_url: str = (
-        "postgresql+psycopg://postgres:abhay2121N@localhost:5432/plb_gateway"
+        "postgresql+psycopg://postgres:postgres@localhost:5432/plb_gateway"
     )
+
+    @field_validator("database_url", mode="before")
+    @classmethod
+    def fix_db_scheme(cls, v: str) -> str:
+        """Ensure the URL always uses the psycopg (v3) driver dialect."""
+        if v.startswith("postgres://"):
+            v = v.replace("postgres://", "postgresql+psycopg://", 1)
+        elif v.startswith("postgresql://"):
+            v = v.replace("postgresql://", "postgresql+psycopg://", 1)
+        elif v.startswith("postgresql+psycopg2://"):
+            v = v.replace("postgresql+psycopg2://", "postgresql+psycopg://", 1)
+        return v
 
     gateway_id: str = "GATEWAY_01"
 
