@@ -279,8 +279,18 @@ function initializeMap() {
     });
     console.log('✓ Map instance created successfully');
 
-    // Street map layer (default) - OpenStreetMap
-    console.log('📍 Adding Street Map layer from OpenStreetMap...');
+    // Offline map layer (served locally by Raspberry Pi / FastAPI without internet)
+    console.log('📍 Adding Offline Map layer from local static storage...');
+    const offlineLayer = L.tileLayer('/static/maps/{z}/{x}/{y}.png', {
+      attribution: 'Offline Map (Local Gateway)',
+      maxZoom: 18,
+      minZoom: 2,
+      errorTileUrl: 'data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" fill="%230f172a"><rect width="256" height="256"/><text x="50%" y="50%" fill="%2364748b" font-size="12" font-family="sans-serif" text-anchor="middle" dy=".3em">No Offline Tile</text></svg>'
+    }).addTo(plbMap);
+    console.log('✓ Offline Map layer added and activated');
+
+    // Online Street map layer (fallback when internet is available)
+    console.log('🌐 Creating Online Street Map layer...');
     const streetLayer = L.tileLayer(
       'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
       {
@@ -288,8 +298,7 @@ function initializeMap() {
         maxZoom: 19,
         minZoom: 2
       }
-    ).addTo(plbMap);
-    console.log('✓ Street Map layer added and activated');
+    );
 
     // Satellite layer (MapTiler or fallback)
     console.log('🛰️  Creating Satellite layer...');
@@ -313,8 +322,9 @@ function initializeMap() {
     // Layer control for switching maps
     console.log('🎮 Adding layer control...');
     const baseLayers = {
-      'Street Map': streetLayer,
-      'Satellite': satelliteLayer,
+      '🗺️ Offline Map (Local)': offlineLayer,
+      '🌐 Online Streets (OSM)': streetLayer,
+      '🛰️ Satellite': satelliteLayer,
     };
     L.control.layers(baseLayers, {}, { position: 'topleft' }).addTo(plbMap);
     console.log('✓ Layer control added');
